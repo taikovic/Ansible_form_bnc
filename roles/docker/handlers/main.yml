@@ -1,0 +1,20 @@
+---
+# handlers file for arillso.docker
+
+- name: restart docker
+  become: true
+  service:
+    name: docker
+    state: restarted
+
+- name: start docker
+  become: true
+  service:
+    name: docker
+    state: started
+
+- name: enable docker
+  become: true
+  service:
+    name: docker
+    enabled: true

@@ -1,0 +1,11 @@
+- name: Install tar
+  yum:
+    name: tar
+    state: present
+  become: yes
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  changed_when: true    
+  notify: "Restart server & wait for it to restart"
+  become: yes

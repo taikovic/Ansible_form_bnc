@@ -1,0 +1,6 @@
+---
+# vars file for arillso.docker
+
+docker_package:
+  - docker-ce
+  - python-pip

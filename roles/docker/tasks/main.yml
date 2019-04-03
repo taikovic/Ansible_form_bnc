@@ -1,0 +1,117 @@
+---
+# tasks file for arillso.docker
+
+- name: add OS specific variables
+  include_vars: "{{ loop_vars }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_system }}.yml"
+        - "defaults.yml"
+      paths:
+        - "vars"
+  loop_control:
+    loop_var: loop_vars
+  tags:
+    - configuration
+    - packages
+
+- name: include distribution tasks
+  include_tasks: "{{ loop_distribution }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_system }}.yml"
+        - "defaults.yml"
+      paths:
+        - "distribution"
+  loop_control:
+    loop_var: loop_distribution
+  tags:
+    - configuration
+    - packages
+
+- name: install docker
+  become: true
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ docker_package }}"
+  notify:
+    - start docker
+    - enable docker
+  tags:
+    - packages
+
+- name: install python modules
+  pip:
+    name: "{{ docker_package_pip }}"
+  tags:
+    - packages
+
+- name: create docker directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  with_items:
+    - "/etc/docker"
+  tags:
+    - configuration
+
+- name: configure docker daemon
+  become: true
+  template:
+    backup: yes
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0600'
+    owner: root
+    group: root
+  notify:
+    - restart docker
+  tags:
+    - configuration
+
+- name: add our login user to docker group
+  become: true
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+  tags:
+    - configuration
+
+- name: create docker clean job
+  cron:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default('present') }}"
+    job: "{{ item.job }}"
+    minute: "{{ item.schedule.minute }}"
+    hour: "{{ item.schedule.hour }}"
+    day: "{{ item.schedule.day }}"
+    month: "{{ item.schedule.month }}"
+    weekday: "{{ item.schedule.weekday }}"
+  when: docker_cron_enable
+  with_items:
+    - "{{ docker_cron }}"
+  tags:
+    - configuration
+
+- name: run handlers
+  meta: flush_handlers
+  tags:
+    - configuration
+    - packages
+
+- name: reset ssh connection
+  meta: reset_connection

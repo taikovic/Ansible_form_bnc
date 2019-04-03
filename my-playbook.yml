@@ -1,0 +1,49 @@
+- hosts: all
+  tasks:
+  - name: Disable SELinux 
+    selinux: 
+      state: disabled
+    notify:
+     - Reboot 
+  become: yes
+- hosts: host02
+  tasks:
+  - name: install openJDK
+    yum:
+      name: java-1.8.0-openjdk.x86_64
+      state: present
+  - name: jenkins repo installation
+    yum_repository:
+      name: jenkins
+      description: "jenkins"
+      state: present
+      baseurl: http://pkg.jenkins.io/redhat/jenkins.repo
+  - name: Install Jenkins
+    yum:
+      name: jenkins
+      state: present
+  - name: Start Jenkins service
+    systemd:
+      name: jenkins
+      state: restarted
+      enabled: yes
+  - name: start firewalld on host02
+    systemd:
+      name: firewalld
+      state: started
+  - name:
+    firewalld:
+      port: 8080/tcp
+      permanent: yes
+      state: enabled
+  become: yes
+
+
+
+
+
+
+
+
+
+   

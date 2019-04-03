@@ -1,0 +1,12 @@
+---
+- name: Install Nginx with YUM
+  become: yes
+  yum:
+    name: EPEL
+    state: present
+- name: start Nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+

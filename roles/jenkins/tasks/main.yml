@@ -1,0 +1,33 @@
+
+- name: jenkins repo installation
+  yum_repository:
+    name: jenkins
+    description: "jenkins"
+    state: present
+    baseurl: https://pkg.jenkins.io/redhat/
+    gpgcheck: yes
+    gpgkey: https://pkg.jenkins.io/redhat/jenkins.io.key
+  become: yes
+- name: Install Jenkins
+  yum:
+    name: jenkins
+    state: present
+  become: yes
+- name: Start Jenkins service
+  systemd:
+    name: jenkins
+    state: restarted
+    enabled: yes
+  become: yes
+- name: start firewalld on host02
+  systemd:
+    name: firewalld
+    state: started
+  become: yes  
+- name:
+  firewalld:
+    port: 8080/tcp
+    permanent: yes
+    state: enabled
+  become: yes
+

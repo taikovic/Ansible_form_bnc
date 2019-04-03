@@ -1,0 +1,13 @@
+- hosts: all
+  tasks:
+  - import_role:
+      name: common
+- hosts: host02
+  tasks:
+  - import_role:
+      name: java
+  - import_role:
+      name: jenkins
+  - import_role:
+      name: reverse-proxy
+ 
